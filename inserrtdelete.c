@@ -1,60 +1,67 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct Node {
+struct Node {
     int data;
     struct Node *next;
-} Node;
+};
 
-Node *insertAtBeginning(Node *head, int data) {
-    Node *newNode = (Node *)malloc(sizeof(Node));
+struct Node *createNode(int data) {
+    struct Node *newNode = (struct Node *)malloc(sizeof(struct Node));
     if (newNode == NULL) {
         printf("Memory allocation failed.\n");
         exit(EXIT_FAILURE);
     }
-
     newNode->data = data;
-    newNode->next = head;
-
+    newNode->next = NULL;
     return newNode;
 }
 
-Node *deleteNodeAtPosition(Node *head, int position) {
-    if (head == NULL) {
-        printf("List is empty.\n");
-        return NULL;
+void insertNode(struct Node **head, int data) {
+    struct Node *newNode = createNode(data);
+    if (*head == NULL) {
+        *head = newNode;
+        return;
     }
 
-    if (position == 1) {
-        Node *temp = head;
-        head = head->next;
-        free(temp);
-        return head;
+    struct Node *current = *head;
+    while (current->next != NULL) {
+        current = current->next;
+    }
+    current->next = newNode;
+}
+
+void deleteNode(struct Node **head, int data) {
+    if (*head == NULL) {
+        printf("List is empty. Cannot delete.\n");
+        return;
     }
 
-    Node *prev = NULL;
-    Node *current = head;
-    int currentPosition = 1;
+    struct Node *current = *head;
+    struct Node *prev = NULL;
 
-    while (current != NULL && currentPosition < position) {
+    if (current->data == data) {
+        *head = current->next;
+        free(current);
+        return;
+    }
+
+    while (current != NULL && current->data != data) {
         prev = current;
         current = current->next;
-        currentPosition++;
     }
 
     if (current == NULL) {
-        printf("Position out of range.\n");
-        return head;
+        printf("Data not found. Cannot delete.\n");
+        return;
     }
 
     prev->next = current->next;
     free(current);
-
-    return head;
 }
 
-void printList(Node *head) {
-    Node *current = head;
+void displayList(struct Node *head) {
+    struct Node *current = head;
     while (current != NULL) {
         printf("%d -> ", current->data);
         current = current->next;
@@ -62,25 +69,15 @@ void printList(Node *head) {
     printf("NULL\n");
 }
 
-void freeList(Node *head) {
-    Node *current = head;
-    while (current != NULL) {
-        Node *temp = current;
-        current = current->next;
-        free(temp);
-    }
-}
-
 int main() {
-    Node *head = NULL;
-
-    int choice, data, position;
+    struct Node *head = NULL;
+    int choice, data;
 
     while (1) {
-        printf("\nMenu:\n");
-        printf("1. Insert node at the beginning\n");
-        printf("2. Delete node at a specific position\n");
-        printf("3. Print the list\n");
+        printf("\nLinked List Operations:\n");
+        printf("1. Insert node\n");
+        printf("2. Delete node\n");
+        printf("3. Display list\n");
         printf("4. Exit\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
@@ -89,24 +86,19 @@ int main() {
             case 1:
                 printf("Enter data to insert: ");
                 scanf("%d", &data);
-                head = insertAtBeginning(head, data);
+                insertNode(&head, data);
                 break;
-
             case 2:
-                printf("Enter position to delete: ");
-                scanf("%d", &position);
-                head = deleteNodeAtPosition(head, position);
+                printf("Enter data to delete: ");
+                scanf("%d", &data);
+                deleteNode(&head, data);
                 break;
-
             case 3:
-                printf("Linked list:\n");
-                printList(head);
+                printf("Linked List: ");
+                displayList(head);
                 break;
-
             case 4:
-                freeList(head);
-                exit(EXIT_SUCCESS);
-
+                exit(0);
             default:
                 printf("Invalid choice. Please try again.\n");
         }
