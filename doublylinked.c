@@ -1,14 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Define the structure for a node in the doubly linked list
 struct Node {
     int data;
     struct Node* prev;
     struct Node* next;
 };
 
-// Function to create a new node
 struct Node* createNode(int data) {
     struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
     if (newNode == NULL) {
@@ -21,46 +19,83 @@ struct Node* createNode(int data) {
     return newNode;
 }
 
-// Function to insert a node at the beginning of the doubly linked list
-void insertAtBeginning(struct Node** head, int data) {
+struct Node* insertAtBeginning(struct Node* head, int data) {
     struct Node* newNode = createNode(data);
-    newNode->next = *head;
-    if (*head != NULL) {
-        (*head)->prev = newNode;
+    newNode->next = head;
+    if (head != NULL) {
+        head->prev = newNode;
     }
-    *head = newNode;
+    return newNode;
 }
 
-// Function to insert a node at the end of the doubly linked list
-void insertAtEnd(struct Node** head, int data) {
+struct Node* insertAtEnd(struct Node* head, int data) {
     struct Node* newNode = createNode(data);
-    if (*head == NULL) {
-        *head = newNode;
+    if (head == NULL) {
+        return newNode;
     } else {
-        struct Node* current = *head;
+        struct Node* current = head;
         while (current->next != NULL) {
             current = current->next;
         }
         current->next = newNode;
         newNode->prev = current;
+        return head;
     }
 }
 
-// Function to delete a node by value
-void deleteNode(struct Node** head, int data) {
-    if (*head == NULL) {
-        printf("List is empty, deletion failed.\n");
-        return;
+struct Node* insertAtPosition(struct Node* head, int data, int position) {
+    if (position < 1) {
+        printf("Invalid position. Position should be greater than or equal to 1.\n");
+        return head;
     }
 
-    struct Node* current = *head;
+    struct Node* newNode = createNode(data);
+    if (position == 1) {
+        newNode->next = head;
+        if (head != NULL) {
+            head->prev = newNode;
+        }
+        return newNode;
+    } else {
+        struct Node* current = head;
+        int currentPosition = 1;
+
+        while (currentPosition < position - 1 && current != NULL) {
+            current = current->next;
+            currentPosition++;
+        }
+
+        if (current == NULL) {
+            printf("Invalid position. Position exceeds the length of the list.\n");
+            free(newNode);
+            return head;
+        }
+
+        newNode->next = current->next;
+        newNode->prev = current;
+        if (current->next != NULL) {
+            current->next->prev = newNode;
+        }
+        current->next = newNode;
+
+        return head;
+    }
+}
+
+struct Node* deleteNode(struct Node* head, int data) {
+    if (head == NULL) {
+        printf("List is empty, deletion failed.\n");
+        return head;
+    }
+
+    struct Node* current = head;
 
     while (current != NULL) {
         if (current->data == data) {
             if (current->prev != NULL) {
                 current->prev->next = current->next;
             } else {
-                *head = current->next;
+                head = current->next;
             }
 
             if (current->next != NULL) {
@@ -68,16 +103,16 @@ void deleteNode(struct Node** head, int data) {
             }
 
             free(current);
-            return; // Node found and deleted
+            return head;
         }
 
         current = current->next;
     }
 
     printf("Node with data %d not found, deletion failed.\n", data);
+    return head;
 }
 
-// Function to search for a node by value
 struct Node* searchNode(struct Node* head, int data) {
     struct Node* current = head;
     while (current != NULL) {
@@ -86,10 +121,9 @@ struct Node* searchNode(struct Node* head, int data) {
         }
         current = current->next;
     }
-    return NULL; // Node not found
+    return NULL;
 }
 
-// Function to display the doubly linked list
 void displayList(struct Node* head) {
     struct Node* current = head;
     printf("Doubly Linked List: ");
@@ -102,10 +136,10 @@ void displayList(struct Node* head) {
 
 int main() {
     struct Node* head = NULL;
-    int choice, data;
+    int choice, data, position;
 
     while (1) {
-        printf("\n1. Insert at the beginning\n2. Insert at the end\n3. Delete a node\n4. Search for a node\n5. Display list\n6. Exit\n");
+        printf("\n1. Insert at the beginning\n2. Insert at the end\n3. Insert at a position\n4. Delete a node\n5. Search for a node\n6. Display list\n7. Exit\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
 
@@ -113,19 +147,26 @@ int main() {
             case 1:
                 printf("Enter data to insert at the beginning: ");
                 scanf("%d", &data);
-                insertAtBeginning(&head, data);
+                head = insertAtBeginning(head, data);
                 break;
             case 2:
                 printf("Enter data to insert at the end: ");
                 scanf("%d", &data);
-                insertAtEnd(&head, data);
+                head = insertAtEnd(head, data);
                 break;
             case 3:
-                printf("Enter data to delete: ");
+                printf("Enter data to insert: ");
                 scanf("%d", &data);
-                deleteNode(&head, data);
+                printf("Enter position to insert at: ");
+                scanf("%d", &position);
+                head = insertAtPosition(head, data, position);
                 break;
             case 4:
+                printf("Enter data to delete: ");
+                scanf("%d", &data);
+                head = deleteNode(head, data);
+                break;
+            case 5:
                 printf("Enter data to search: ");
                 scanf("%d", &data);
                 struct Node* foundNode = searchNode(head, data);
@@ -135,11 +176,10 @@ int main() {
                     printf("Node with data %d not found.\n", data);
                 }
                 break;
-            case 5:
+            case 6:
                 displayList(head);
                 break;
-            case 6:
-                // Free allocated memory and exit
+            case 7:
                 while (head != NULL) {
                     struct Node* temp = head;
                     head = head->next;
